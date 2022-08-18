@@ -109,6 +109,9 @@ library SafeMath {
     }
 }
 
+/*
+* Developed by spaar-games.com
+*/
 contract HorseGameBet {
     using SafeMath for uint256;
     
@@ -133,23 +136,24 @@ contract HorseGameBet {
     event win_bet_event(uint256 amount, address wallet);
     event bet_event(uint256 amount, address wallet);
 
-    struct Users {
+    struct User {
         address Wallet;
         address Referred;
         uint256 WonGames;
         uint256 PlayedGames;
         uint256 EarnedMoney;
         uint256 EarnedMoneyReferred;
+        string[] TimeBets;
         string Country;
     }
 
-    mapping(address => Users) private _users_map;
+    mapping(address => User) private _users_map;
 
 
     constructor() {
         _owner = payable(msg.sender);
         initializeContract = false;
-        bnbPrice = AggregatorV3Interface(0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526);
+        bnbPrice = AggregatorV3Interface(0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE); 
     }
 
     modifier onlyOwner(address _adr) {
@@ -219,6 +223,10 @@ contract HorseGameBet {
         emit win_bet_event(_amount, _winAdr);
     }
 
+    function timeBet(address _adr, string memory _data) external authorized(msg.sender){
+        _users_map[_adr].TimeBets.push(_data);
+    }
+
     function returnMoney(uint256 _amount, address _adr) external authorized(msg.sender){
         require(initializeContract, "The contract is currently paused");
         _users_map[_adr].PlayedGames--;
@@ -229,11 +237,6 @@ contract HorseGameBet {
             balance[_users_map[_adr].Referred] -= mark_fee;
             _users_map[_users_map[_adr].Referred].EarnedMoneyReferred -= mark_fee;
         }  
-    }
-
-    // Testnet function 
-    function ownerWithDraw() public {
-    _owner.transfer(address(this).balance);
     }
    
     function setTeamWallets(string memory _dev, address _devAdr) external onlyOwner(msg.sender){
@@ -270,6 +273,10 @@ contract HorseGameBet {
     
     function getMoneyReceivedFromMyReferrals(address _adr) public view returns(uint256){
         return _users_map[_adr].EarnedMoneyReferred;
+    }
+
+    function getTimeBet(address _adr) public view returns(string[] memory){
+        return _users_map[_adr].TimeBets;
     }
 
     function getCountry(address _adr) public view returns(string memory){
